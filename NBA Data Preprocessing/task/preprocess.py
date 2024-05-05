@@ -25,10 +25,21 @@ def clean_data(path):
     return df
 
 
+def feature_data(df):
+    df['version'] = pd.to_datetime(df['version'], format='NBA2k%y')
+    df['age'] = (df['version'].dt.year - df['b_day'].dt.year)
+    df['experience'] = (df['version'].dt.year - df['draft_year'].dt.year)
+    df['bmi'] = df['weight'] / df['height'] ** 2
+    df = df.drop(columns=['version', 'b_day', 'draft_year', 'weight', 'height'])
+    df = df.drop(columns=(df.columns[(df.nunique() > 50) & (df.dtypes == object)]))
+    return df
+
+
 def main():
     get_data()
     data_path = "../Data/nba2k-full.csv"
-    clean_data(data_path)
+    df_clean = clean_data(data_path)
+    feature_data(df_clean)
 
 
 if __name__ == '__main__':
