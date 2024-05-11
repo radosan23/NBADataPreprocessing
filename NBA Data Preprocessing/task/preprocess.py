@@ -35,11 +35,22 @@ def feature_data(df):
     return df
 
 
+def multicol_data(df, threshold=0.5):
+    corr = df.drop(columns='salary').corr(numeric_only=True).unstack()
+    corr_pairs = corr[abs(corr) > threshold].index
+    corr_pairs = set([tuple(sorted(x)) for x in corr_pairs if x[0] != x[1]])
+    for pair in corr_pairs:
+        if pair[0] in df.columns and pair[1] in df.columns:
+            df = df.drop(columns=df[['salary', *pair]].corr()['salary'].idxmin())
+    return df
+
+
 def main():
     get_data()
     data_path = "../Data/nba2k-full.csv"
     df_clean = clean_data(data_path)
-    feature_data(df_clean)
+    df_feat = feature_data(df_clean)
+    multicol_data(df_feat)
 
 
 if __name__ == '__main__':
