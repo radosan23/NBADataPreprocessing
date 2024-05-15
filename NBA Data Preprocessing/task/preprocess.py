@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 import requests
+import numpy as np
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 
 def get_data():
@@ -45,12 +47,23 @@ def multicol_data(df, threshold=0.5):
     return df
 
 
+def transform_data(df):
+    num_df = df.select_dtypes('number').drop(columns='salary')
+    scaler = StandardScaler()
+    num_scaled = pd.DataFrame(scaler.fit_transform(num_df), columns=num_df.columns)
+    cat_df = df.select_dtypes('object')
+    onehot = OneHotEncoder(sparse_output=False)
+    cat_encoded = pd.DataFrame(onehot.fit_transform(cat_df), columns=np.concatenate(onehot.categories_))
+    return pd.concat([num_scaled, cat_encoded], axis=1), df['salary']
+
+
 def main():
     get_data()
     data_path = "../Data/nba2k-full.csv"
     df_clean = clean_data(data_path)
     df_feat = feature_data(df_clean)
-    multicol_data(df_feat)
+    df = multicol_data(df_feat)
+    transform_data(df)
 
 
 if __name__ == '__main__':
